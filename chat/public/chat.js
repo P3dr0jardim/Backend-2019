@@ -3,27 +3,36 @@ $(function () {
    
     var socket = io.connect('http://localhost:3000')
     
-    var message = $("#message")
-    var usernamename = $("#usernamename")
-    var send_message = $("#send_message")
-    var chatroom = $("#chatroom")
-    var feedback = $("#feedback")
-    var send_username = $("#send_username")
+    var message = $("#message");
+    var send_message = $("#send_message");
+    var chatroom = $("#chatroom");
+    var feedback = $("#feedback");
+    var updated_name = $("#update_name");
+    var name = $("#name");
 
-    send_message.click(function () {
-        socket.emit('new_message', { message: message.val() })
+    send_message.click(() => {
+        socket.emit("send_message", {
+            message: message.val(),
+            name: name.val()
+        })
     })
-
-    socket.on("new_message", (data) => {
-        feedback.html('');
-        message.val('');
-        chatroom.append("<p class='message'>" + data.usernamename + ": " + data.message + "</p>")
+    updated_name.click(()=>{
+        socket.emit("update_name",{
+            name: name.val()
+        })
     })
-
-    send_username.click(function(){
-        socket.emit('nickname', { usernamename : usernamename.val() })
-        console.log(usernamename.val())
+    socket.emit("user_connected");
+    //Listen on new_message
+    socket.on("broadcast_message", (data) => {
+        chatroom.append("<p class='message'>" + data.username + ": " + data.message + "</p>");
+    });
+    socket.on("broadcast_updated_name",(data)=>{
+        chatroom.append("<p class='message'>" + data.old_user +" is now "+data.username+" </p>");
     })
-
-   
+    socket.on("broadcast_user", (data) => {
+        chatroom.append("<p class='message'>" + data.username +" connected </p>");
+    })
+    socket.on("broadcast_user_disconnect", (data) => {
+        chatroom.append("<p class='message'>" + data.username +" disconnected </p>");
+    })
 });
